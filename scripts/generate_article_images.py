@@ -237,13 +237,13 @@ plt.close()
 print("4. images/longtail_stock_likes.png generated.")
 
 # ==========================================
-# 5. 推定月間総PV推移 (images/estimated_pv_trend.png)
+# 5. 推定月間獲得ログインLike数推移 (images/estimated_likes_trend.png)
 # ==========================================
 query5 = """
 SELECT 
     substr(published_at, 1, 7) as pub_month,
     COUNT(*) as article_count,
-    SUM(liked_count) as cohort_total_likes
+    SUM(authenticated_liked_count) as cohort_total_likes
 FROM articles
 WHERE status = 'success' AND published_at >= '2021-01-01' AND published_at <= '2026-10-21'
 GROUP BY pub_month
@@ -284,7 +284,7 @@ for idx, row in df_cohort.iterrows():
 display_months = [m for m in all_months if '2024-01' <= m <= '2026-09']
 
 # ==========================================
-# 5. 推定月間獲得Like数推移 (images/estimated_likes_trend.png)
+# 5. 推定月間獲得ログインLike数推移 (images/estimated_likes_trend.png)
 # ==========================================
 flow_likes = [monthly_likes[m]['flow'] for m in display_months]
 stock_likes = [monthly_likes[m]['stock'] for m in display_months]
@@ -298,7 +298,7 @@ b2 = ax1.bar(x, stock_likes, bottom=flow_likes, label='以前に投稿された�
 
 ax1.set_xticks(x)
 ax1.set_xticklabels(format_monthly_labels(display_months), rotation=0, fontsize=8.5)
-ax1.set_ylabel('推定プラットフォーム月間獲得Like数 (件/月)', fontsize=11, fontweight='bold', color='#333333')
+ax1.set_ylabel('推定プラットフォーム月間獲得ログインLike数 (件/月)', fontsize=11, fontweight='bold', color='#333333')
 ax1.yaxis.set_major_formatter(plt.matplotlib.ticker.FuncFormatter(lambda val, pos: f"{int(val):,}"))
 ax1.set_ylim(0, max(total_likes) * 1.12)
 ax1.legend([b2, b1], [b2.get_label(), b1.get_label()], loc='upper right', frameon=True, framealpha=0.9, fontsize=10)
@@ -313,10 +313,12 @@ print("5. images/estimated_likes_trend.png generated.")
 
 # ==========================================
 # 6. 推定月間総PV推移 (images/estimated_pv_trend.png)
+# ログインLike 1件あたり 322.5 PV（ログイン100PV + 外部非ログイン222.5PV）で換算
 # ==========================================
-flow_pv = [(monthly_likes[m]['flow'] * 263.8) / 1_000_000 for m in display_months]
-stock_pv = [(monthly_likes[m]['stock'] * 263.8) / 1_000_000 for m in display_months]
-total_pv = [(monthly_likes[m]['total'] * 263.8) / 1_000_000 for m in display_months]
+PV_PER_AUTH_LIKE = 322.5
+flow_pv = [(monthly_likes[m]['flow'] * PV_PER_AUTH_LIKE) / 1_000_000 for m in display_months]
+stock_pv = [(monthly_likes[m]['stock'] * PV_PER_AUTH_LIKE) / 1_000_000 for m in display_months]
+total_pv = [(monthly_likes[m]['total'] * PV_PER_AUTH_LIKE) / 1_000_000 for m in display_months]
 
 fig, ax1 = plt.subplots(figsize=(11.5, 4.8))
 
